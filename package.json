@@ -1,5 +1,5 @@
 {
-  "name": "doAsSoonAs",
+  "name": "awaitr",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -7,7 +7,6 @@
   "scripts": {
     "testing": "nodemon --ext ts --watch src/* --exec \"npm run building\"",
     "building": "tsc && node build/test",
-    "prepublish": "npm run build",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "ts-node": "ts-node src"

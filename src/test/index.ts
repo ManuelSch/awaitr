@@ -1,55 +1,26 @@
-import { doAsSoonAs } from '..';
+import { Awaitr } from '..';
 
 let xhrService = {  // XHR Service mock
     get: function(url: string): Promise<Object> {
         return new Promise((resolve, reject) => {
             setTimeout(() => {      
-                resolve({
+                resolve(
+                    {
                     username: 'testrrr',
                     email: 'test@test.com'
-                });
-            }, 10000);
-        })
-    }
-}
-
-class Awaitr {
-    private finished = false;
-    private underway = false;
-    private callbacks: Array<() => void> = [];
-
-    public wrap(wrappedMethod: () => Promise<any>): Promise<any> {
-        return new Promise((resolve) => {
-            if(this.finished) {
-                resolve();
-                return;
-            }
-
-            this.callbacks.push(resolve);
-
-            if(!this.underway) {
-                this.underway = true;
-
-                wrappedMethod().then(() => {
-                    this.finished = true;
-                    this.callbacks.forEach((cb) => {
-                        cb();
-                    });
-                    this.callbacks = [];
-                    resolve();
-                })         
-            }
+                }
+                );
+            }, 1300);
         });
     }
 }
+
 
 class TestClass {
 
     public userData: Object;
 
     private initializeAwaitr = new Awaitr();
-
-    constructor() {}
 
     initialize (): Promise<any> {
         return this.initializeAwaitr.wrap(() => {
@@ -58,7 +29,10 @@ class TestClass {
             .then((userData) => {
                 this.userData = userData;
                 console.log('finished initializing...');
-            });
+            })
+            // .catch(() => {
+            //     console.log('ERROR: access denied');
+            // });
         });
     }
 }
@@ -69,13 +43,14 @@ let test = new TestClass();
 test.initialize();
 
 setTimeout(() => {
-    test.initialize().then(() => {
+    test.initialize()
+    .then(() => {
         console.log('--> init callback 1', test.userData);
-    });
+    })
     
     test.initialize().then(() => {
         console.log('--> init callback 2', test.userData);
-    });
+    })
     
     test.initialize().then(() => {
         console.log('--> init callback 2.3', test.userData);

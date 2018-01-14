@@ -1,81 +1,61 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-let xhrService = {
+var __1 = require("..");
+var xhrService = {
     get: function (url) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
+        return new Promise(function (resolve, reject) {
+            setTimeout(function () {
                 resolve({
                     username: 'testrrr',
                     email: 'test@test.com'
                 });
-            }, 10000);
+            }, 1300);
         });
     }
 };
-class Awaitr {
-    constructor() {
-        this.finished = false;
-        this.underway = false;
-        this.callbacks = [];
+var TestClass = /** @class */ (function () {
+    function TestClass() {
+        this.initializeAwaitr = new __1.Awaitr();
     }
-    wrap(wrappedMethod) {
-        return new Promise((resolve) => {
-            if (this.finished) {
-                resolve();
-                return;
-            }
-            this.callbacks.push(resolve);
-            if (!this.underway) {
-                this.underway = true;
-                wrappedMethod().then(() => {
-                    this.finished = true;
-                    this.callbacks.forEach((cb) => {
-                        cb();
-                    });
-                    this.callbacks = [];
-                    resolve();
-                });
-            }
-        });
-    }
-}
-class TestClass {
-    constructor() {
-        this.initializeAwaitr = new Awaitr();
-    }
-    initialize() {
-        return this.initializeAwaitr.wrap(() => {
+    TestClass.prototype.initialize = function () {
+        var _this = this;
+        return this.initializeAwaitr.wrap(function () {
             console.log('initializing...');
             return xhrService.get('user/getUser')
-                .then((userData) => {
-                this.userData = userData;
+                .then(function (userData) {
+                _this.userData = userData;
                 console.log('finished initializing...');
             });
+            // .catch(() => {
+            //     console.log('ERROR: access denied');
+            // });
         });
-    }
-}
-let test = new TestClass();
+    };
+    return TestClass;
+}());
+var test = new TestClass();
 test.initialize();
-setTimeout(() => {
-    test.initialize().then(() => {
+setTimeout(function () {
+    test.initialize()
+        .then(function () {
         console.log('--> init callback 1', test.userData);
     });
-    test.initialize().then(() => {
+    test.initialize().then(function () {
         console.log('--> init callback 2', test.userData);
     });
-    test.initialize().then(() => {
+    test.initialize().then(function () {
         console.log('--> init callback 2.3', test.userData);
     });
-    test.initialize().then(() => {
+    test.initialize().then(function () {
         console.log('--> init callback 2.7', test.userData);
     });
-    setTimeout(() => {
-        test.initialize().then(() => {
+    setTimeout(function () {
+        test.initialize().then(function () {
             console.log('--> init callback 3', test.userData);
         });
     }, 2000);
-    setTimeout(() => {
-        test.initialize().then(() => {
+    setTimeout(function () {
+        test.initialize().then(function () {
             console.log('--> init callback 4', test.userData);
         });
     }, 3000);

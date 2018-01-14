@@ -1,3 +1,6 @@
-export declare function doAsSoonAs<T>(baseObject: Object, method: (...args: any[]) => T, callback: (returnValue?: T) => void): {
-    stop: () => void;
-};
+export declare class Awaitr {
+    private finished;
+    private underway;
+    private callbacks;
+    wrap(wrappedMethod: () => Promise<any>): Promise<any>;
+}
