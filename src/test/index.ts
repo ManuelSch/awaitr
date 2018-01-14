@@ -8,7 +8,7 @@ let xhrService = {  // XHR Service mock
                     username: 'testrrr',
                     email: 'test@test.com'
                 });
-            }, 1000);
+            }, 10000);
         })
     }
 }
@@ -18,28 +18,28 @@ class Awaitr {
     private underway = false;
     private callbacks: Array<() => void> = [];
 
-    public wrap(
-        wrappedMethod: () => Promise<any>,
-        newCallback: () => void
-    )/* : Promise<any> */ {
-        if(this.finished) {
-            newCallback();
-            return;
-        }
+    public wrap(wrappedMethod: () => Promise<any>): Promise<any> {
+        return new Promise((resolve) => {
+            if(this.finished) {
+                resolve();
+                return;
+            }
 
-        this.callbacks.push(newCallback);
+            this.callbacks.push(resolve);
 
-        if(!this.underway) {
-            this.underway = true;
+            if(!this.underway) {
+                this.underway = true;
 
-            wrappedMethod().then(() => {
-                this.finished = true;
-                this.callbacks.forEach((cb) => {
-                    cb();
-                });
-                this.callbacks = [];
-            })         
-        }
+                wrappedMethod().then(() => {
+                    this.finished = true;
+                    this.callbacks.forEach((cb) => {
+                        cb();
+                    });
+                    this.callbacks = [];
+                    resolve();
+                })         
+            }
+        });
     }
 }
 
@@ -52,15 +52,13 @@ class TestClass {
     constructor() {}
 
     initialize (): Promise<any> {
-        return new Promise((resolve) => {
-            this.initializeAwaitr.wrap(() => {
-                console.log('initializing...');
-                return xhrService.get('user/getUser')
-                .then((userData) => {
-                    this.userData = userData;
-                    console.log('finished initializing...');
-                });   
-            }, resolve);
+        return this.initializeAwaitr.wrap(() => {
+            console.log('initializing...');
+            return xhrService.get('user/getUser')
+            .then((userData) => {
+                this.userData = userData;
+                console.log('finished initializing...');
+            });
         });
     }
 }
@@ -68,30 +66,34 @@ class TestClass {
 
 let test = new TestClass();
 
-test.initialize().then(() => {
-    console.log('--> init callback 1', test.userData);
-});
-
-test.initialize().then(() => {
-    console.log('--> init callback 2', test.userData);
-});
-
-test.initialize().then(() => {
-    console.log('--> init callback 2.3', test.userData);
-});
-
-test.initialize().then(() => {
-    console.log('--> init callback 2.7', test.userData);
-});
+test.initialize();
 
 setTimeout(() => {
     test.initialize().then(() => {
-        console.log('--> init callback 3', test.userData);
-    })
-}, 2000);
-
-setTimeout(() => {
+        console.log('--> init callback 1', test.userData);
+    });
+    
     test.initialize().then(() => {
-        console.log('--> init callback 4', test.userData);
-    })
-}, 3000);
+        console.log('--> init callback 2', test.userData);
+    });
+    
+    test.initialize().then(() => {
+        console.log('--> init callback 2.3', test.userData);
+    });
+    
+    test.initialize().then(() => {
+        console.log('--> init callback 2.7', test.userData);
+    });
+    
+    setTimeout(() => {
+        test.initialize().then(() => {
+            console.log('--> init callback 3', test.userData);
+        })
+    }, 2000);
+    
+    setTimeout(() => {
+        test.initialize().then(() => {
+            console.log('--> init callback 4', test.userData);
+        })
+    }, 3000);
+}, 500);

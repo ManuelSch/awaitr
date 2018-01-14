@@ -8,7 +8,7 @@ let xhrService = {
                     username: 'testrrr',
                     email: 'test@test.com'
                 });
-            }, 1000);
+            }, 10000);
         });
     }
 };
@@ -18,22 +18,25 @@ class Awaitr {
         this.underway = false;
         this.callbacks = [];
     }
-    wrap(wrappedMethod, newCallback) {
-        if (this.finished) {
-            newCallback();
-            return;
-        }
-        this.callbacks.push(newCallback);
-        if (!this.underway) {
-            this.underway = true;
-            wrappedMethod().then(() => {
-                this.finished = true;
-                this.callbacks.forEach((cb) => {
-                    cb();
+    wrap(wrappedMethod) {
+        return new Promise((resolve) => {
+            if (this.finished) {
+                resolve();
+                return;
+            }
+            this.callbacks.push(resolve);
+            if (!this.underway) {
+                this.underway = true;
+                wrappedMethod().then(() => {
+                    this.finished = true;
+                    this.callbacks.forEach((cb) => {
+                        cb();
+                    });
+                    this.callbacks = [];
+                    resolve();
                 });
-                this.callbacks = [];
-            });
-        }
+            }
+        });
     }
 }
 class TestClass {
@@ -41,38 +44,39 @@ class TestClass {
         this.initializeAwaitr = new Awaitr();
     }
     initialize() {
-        return new Promise((resolve) => {
-            this.initializeAwaitr.wrap(() => {
-                console.log('initializing...');
-                return xhrService.get('user/getUser')
-                    .then((userData) => {
-                    this.userData = userData;
-                    console.log('finished initializing...');
-                });
-            }, resolve);
+        return this.initializeAwaitr.wrap(() => {
+            console.log('initializing...');
+            return xhrService.get('user/getUser')
+                .then((userData) => {
+                this.userData = userData;
+                console.log('finished initializing...');
+            });
         });
     }
 }
 let test = new TestClass();
-test.initialize().then(() => {
-    console.log('--> init callback 1', test.userData);
-});
-test.initialize().then(() => {
-    console.log('--> init callback 2', test.userData);
-});
-test.initialize().then(() => {
-    console.log('--> init callback 2.3', test.userData);
-});
-test.initialize().then(() => {
-    console.log('--> init callback 2.7', test.userData);
-});
+test.initialize();
 setTimeout(() => {
     test.initialize().then(() => {
-        console.log('--> init callback 3', test.userData);
+        console.log('--> init callback 1', test.userData);
     });
-}, 2000);
-setTimeout(() => {
     test.initialize().then(() => {
-        console.log('--> init callback 4', test.userData);
+        console.log('--> init callback 2', test.userData);
     });
-}, 3000);
+    test.initialize().then(() => {
+        console.log('--> init callback 2.3', test.userData);
+    });
+    test.initialize().then(() => {
+        console.log('--> init callback 2.7', test.userData);
+    });
+    setTimeout(() => {
+        test.initialize().then(() => {
+            console.log('--> init callback 3', test.userData);
+        });
+    }, 2000);
+    setTimeout(() => {
+        test.initialize().then(() => {
+            console.log('--> init callback 4', test.userData);
+        });
+    }, 3000);
+}, 500);
